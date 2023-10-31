@@ -14,15 +14,20 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-const templateVars = { urls: urlDatabase };
 
-app.get("/", (req, res) => {
-  res.render("urls_index", templateVars);
-});
-app.get("/urls.json", (req, res) => {
-  res.render("urls_index", templateVars);
-});
+// app.get("/", (req, res) => {
+  //   res.render("urls_index", templateVars);
+  // });
+  // app.get("/urls.json", (req, res) => {
+    //   res.render("urls_index", templateVars);
+    // });
+    
 app.get("/hello", (req, res) => {
-  console.log(req.params)
+  const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+app.get("/urls/:id", (req, res) => {
+  const templateVars = {id: req.params.id, longURL: "http://www.lighthouselabs.ca"}
+  res.render("urls_show", templateVars);
+})
