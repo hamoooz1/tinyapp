@@ -14,12 +14,14 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+const templateVars = { urls: urlDatabase };
+
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.render("urls_index", templateVars);
 });
 app.get("/urls.json", (req, res) => {
-  res.send(urlDatabase);
+  res.render("urls_index", templateVars);
 });
 app.get("/hello", (req, res) => {
-  res.send("<html><body><h1> Hello </h1><i>World</i></body></html>\n");
+  res.render("urls_index", templateVars);
 });
