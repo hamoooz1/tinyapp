@@ -23,5 +23,6 @@ app.get("/urls.json", (req, res) => {
   res.render("urls_index", templateVars);
 });
 app.get("/hello", (req, res) => {
+  console.log(req.params)
   res.render("urls_index", templateVars);
 });
