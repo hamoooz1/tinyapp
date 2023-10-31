@@ -19,5 +19,5 @@ app.get("/urls.json", (req, res) => {
   res.send(urlDatabase);
 });
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  res.send("<html><body><h1> Hello </h1><i>World</i></body></html>\n");
 });
