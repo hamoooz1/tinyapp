@@ -56,6 +56,14 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 })
 
+app.post("/urls/:id", (req, res) => {
+  const shortId = req.params.id;
+  const newLongURL = req.body.longURL;
+  // Update the longURL in the urlDatabase
+  urlDatabase[shortId] = newLongURL;
+  res.redirect("/urls");
+});
+
 app.get("/u/:id", (req, res) => {
   const shortId = req.params.id // b2xvn2 
   const longUrl = urlDatabase[shortId]; // lighthouselabs.ca
