@@ -14,9 +14,6 @@ const generateRandomString = function () {
   return shortURL;
 }
 
-console.log(generateRandomString())
-
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -43,11 +40,18 @@ app.get("/urls/new", (req, res) => {
 })
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`urls/${shortURL}`);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = {id: req.params.id, longURL: "http://www.lighthouselabs.ca"}
+  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]}
   res.render("urls_show", templateVars);
 })
+
+app.get("/u/:id", (req, res) => {
+  const shortId = req.params.id // b2xvn2 
+  const longUrl = urlDatabase[shortId]; // lighthouselabs.ca
+  res.redirect(longUrl);
+});
