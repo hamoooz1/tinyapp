@@ -20,8 +20,10 @@
       </div>
       <div style="text-align: right; margin-left: auto;">
         <% if (username) { %>       
+          <form class="form-inline" action="/logout" method="post">
             <p style="color: white; display: inline; margin-right: 10px;"><%= username %></p>
             <button type="submit" class="btn btn-primary">Logout</button>
+            </form>
             <% } else {%> 
         <form class="form-inline" action="/login" method="POST">
           <input

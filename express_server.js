@@ -96,6 +96,10 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls")
+})
 // app.post("/register", (req, res) => {
 //   const userId = generateRandomString();
 //   const {email, password} = req.body;
