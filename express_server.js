@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
@@ -39,65 +40,82 @@ const findEmail = function (email) {
   return null;
 }
 
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+// middleware: parses url encoded to "UTF-8"
 app.use(express.urlencoded({ extended: true }));
+
+
 
 //homepage
 app.get("/", (req, res) => {
   const userId = req.cookies["user_id"];
   const user = users[userId]
   const templateVars = { urls: urlDatabase, user };
-    res.render("urls_index", templateVars);
-  });
+  res.render("urls_index", templateVars);
+});
 
 //register page
-  app.get("/register", (req, res) => {
-    const userId = req.cookies["user_id"];
-    const user = users[userId]
-    const templateVars = {
-      user,
-      urls: urlDatabase
-    };
-    res.render("urls_register", templateVars)
-  })
+app.get("/register", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId]
+  const templateVars = {
+    user,
+    urls: urlDatabase
+  };
+  res.render("urls_register", templateVars)
+})
 //hello page
-  app.get("/hello", (req, res) => {
-    const userId = req.cookies["user_id"];
-    const user = users[userId]
-    const templateVars = { urls: urlDatabase, user };
-    res.render("urls_index", templateVars);
-  });
+app.get("/hello", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId]
+  const templateVars = { urls: urlDatabase, user };
+  res.render("urls_index", templateVars);
+});
 //
-  app.get("/urls/new", (req, res) => {
-    const userId = req.cookies["user_id"];
-    const user = users[userId]
-    const templateVars = { urls: urlDatabase, user };
-    res.render("urls_new", templateVars)
-  })
-  
-  app.post("/login", (req, res) => {
-    const username = req.body.username;
-    res.cookie("username", username)
+app.get("/urls/new", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId]
+  const templateVars = { urls: urlDatabase, user };
+  res.render("urls_new", templateVars)
+})
+
+//login form
+app.post("/login", (req, res) => {
+  let { email, password } = req.body;
+  const user = users[findEmail(email)];
+
+  if (!findEmail(email)) {
+    res.status(403).send("user does not exist");
+  }
+
+  else if (password !== user.password) {
+    res.status(403).send("password does not match")
+  }
+  else {
+    res.cookie("user_id", user.id)
     res.redirect("/urls")
-  })
-  
-  app.get("/urls", (req, res) => {
-    const userId = req.cookies["user_id"];
-    const user = users[userId]
-    const templateVars = {
-      user,
-      urls: urlDatabase
-    };
-    res.render("urls_index", templateVars);
-  });
+  }
+
+})
+
+app.get("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId]
+  const templateVars = {
+    user,
+    urls: urlDatabase
+  };
+  res.render("urls_index", templateVars);
+});
 
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies["user_id"];
   const user = users[userId]
-  const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id], user}
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user }
   res.render("urls_show", templateVars);
 })
 
@@ -125,34 +143,34 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect("/urls")
+  res.redirect("/login")
 })
 
 app.post("/register", (req, res) => {
   const userId = generateRandomString();
-  const {email, password} = req.body;
-  
+  let { email, password } = req.body;
+  const salt = bcrypt.genSaltSync(10)
+  let hashedPassword = bcrypt.hashSync(password, salt);
+
   if (email === '' || password === '') {
     res.status(400).send("user did not meet requirments");
   }
 
   else if (findEmail(email) !== null) {
     res.status(400).send("user already exists");
+  } else {
+    const newUser = {
+      id: userId,
+      email: email,
+      password: hashedPassword
+    };
+
+    users[userId] = newUser;
+
+    res.cookie("user_id", userId);
+    console.log(users)
+    res.redirect("/urls");
   }
-
-  else {
-  const newUser = {
-    id: userId,
-    email: email,
-    password: password
-  };
-  
-  users[userId] = newUser;
-
-  res.cookie("user_id", userId);
-  console.log(users)
-  res.redirect("/urls");
-}
 })
 
 app.get("/u/:id", (req, res) => {
@@ -162,5 +180,13 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.render("urls_login")
+  const userId = req.cookies["user_id"];
+  const user = users[userId]
+  const templateVars = { urls: urlDatabase, user };
+
+  if (user) {
+    res.redirect("/urls")
+  }
+
+  res.render("urls_login", templateVars)
 })
