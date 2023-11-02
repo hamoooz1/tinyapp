@@ -66,6 +66,11 @@ app.get("/register", (req, res) => {
     user,
     urls: urlDatabase
   };
+
+  if (userId === null) {
+    res.redirect("/urls")
+  }
+
   res.render("urls_register", templateVars)
 })
 //hello page
@@ -78,9 +83,15 @@ app.get("/hello", (req, res) => {
 //
 app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"];
+
+  if (!userId) {
+    res.redirect("/login")
+  }
+  else {
   const user = users[userId]
   const templateVars = { urls: urlDatabase, user };
   res.render("urls_new", templateVars)
+  }
 })
 
 //login form
@@ -120,9 +131,15 @@ app.get("/urls/:id", (req, res) => {
 })
 
 app.post("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
+  if (!userId) {
+    res.status(404).send("need to be logged in to create new URL")
+  }
+  else {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`urls/${shortURL}`);
+  }
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -176,7 +193,13 @@ app.post("/register", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const shortId = req.params.id // b2xvn2 
   const longUrl = urlDatabase[shortId]; // lighthouselabs.ca
-  res.redirect(longUrl);
+
+  if (!longUrl) {
+    res.status(404).send("<h1> does not exist </h1>")
+  }
+  else {
+    res.redirect(longUrl);
+  }
 });
 
 app.get("/login", (req, res) => {
@@ -187,6 +210,5 @@ app.get("/login", (req, res) => {
   if (user) {
     res.redirect("/urls")
   }
-
   res.render("urls_login", templateVars)
 })
