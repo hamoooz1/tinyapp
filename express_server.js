@@ -1,11 +1,17 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
+const cookieSession = require("cookie-session")
 
+//middleware
 app.set("view engine", "ejs");
-app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieSession({
+  name: "session",
+  keys: ["hamza"]
+}))
+
 
 const urlDatabase = {
   b6UTxQ: {
@@ -65,7 +71,6 @@ app.listen(PORT, () => {
 });
 
 // middleware: parses url encoded to "UTF-8"
-app.use(express.urlencoded({ extended: true }));
 
 
 
@@ -79,37 +84,37 @@ app.get("/", (req, res) => {
 
 //register page
 app.get("/register", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId]
   const templateVars = {
     user,
     urls: urlDatabase
   };
-
+  
   if (userId === null) {
     res.redirect("/urls")
   }
-
+  
   res.render("urls_register", templateVars)
 })
 //hello page
 app.get("/hello", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId]
   const templateVars = { urls: urlDatabase, user };
   res.render("urls_index", templateVars);
 });
 //
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies["user_id"];
-
+  const userId = req.session.user_id;
+  
   if (!userId) {
     res.redirect("/login")
   }
   else {
-  const user = users[userId]
-  const templateVars = { urls: urlDatabase, user };
-  res.render("urls_new", templateVars)
+    const user = users[userId]
+    const templateVars = { urls: urlDatabase, user };
+    res.render("urls_new", templateVars)
   }
 })
 
@@ -117,23 +122,23 @@ app.get("/urls/new", (req, res) => {
 app.post("/login", (req, res) => {
   let { email, password } = req.body;
   const user = findUserByEmail(email);
-
+  
   if (!user) {
     res.status(403).send("user does not exist");
   }
-
+  
   else if (!bcrypt.compareSync(password, user.password)) {
     res.status(403).send("password does not match")
   }
   else {
-    res.cookie("user_id", user.id)
+    req.session.user_id = user.id
     res.redirect("/urls")
   }
-
+  
 })
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId]
   const url = urlsForUser(userId);
 
@@ -177,7 +182,7 @@ app.get("/urls/:id", (req, res) => {
 })
 
 app.post("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (!userId) {
     res.status(404).send("need to be logged in to create new URL")
   }
@@ -190,7 +195,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const shortId = req.params.id // b2xvn2 
   
   if (!userId) {
@@ -207,13 +212,13 @@ app.post("/urls/:id/delete", (req, res) => {
     res.status(403).send("its not yours")
     return;
   }
-  
+
   delete urlDatabase[shortId]; // lighthouselabs.ca
   res.redirect("/urls");
 })
 
 app.post("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const shortId = req.params.id;
   
   if (!userId) {
@@ -264,7 +269,6 @@ app.post("/register", (req, res) => {
 
     users[userId] = newUser;
 
-    res.cookie("user_id", userId);
     console.log(users)
     res.redirect("/urls");
   }
@@ -283,7 +287,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId]
   const templateVars = { urls: urlDatabase, user };
 
